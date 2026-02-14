@@ -1,124 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q-Engine Pro Studio</title>
+    <meta charset="UTF-8"><title>Q-Engine AI Studio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #020617; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .sidebar { background: #0f172a; width: 300px; height: 100vh; border-right: 1px solid #1e293b; overflow-y: auto; }
-        .canvas-area { background: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 20px 20px; }
-        .tool-btn { @apply w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all flex items-center gap-3 mb-2; background: #1e293b; }
-        .tool-btn:hover { background: #3b82f6; transform: translateX(5px); }
-        canvas { border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        body { background: #0f172a; color: white; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar { width: 300px; background: #1e293b; border-right: 1px solid #334155; }
+        .main-stage { flex: 1; background: #0f172a; background-image: radial-gradient(#334155 1px, transparent 1px); background-size: 20px 20px; }
+        .ai-chat-box { height: 200px; background: #0f172a; border-radius: 12px; padding: 10px; font-size: 12px; overflow-y: auto; }
     </style>
 </head>
-<body class="flex">
+<body>
 
-    <aside class="sidebar p-6">
-        <h2 class="text-blue-500 font-black text-xl mb-8 tracking-tighter">Q-ENGINE PRO</h2>
-        
-        <div class="mb-6">
-            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Draw & Write</p>
-            <button onclick="toggleDrawing()" id="drawBtn" class="tool-btn">✏️ Free Draw Mode</button>
-            <button onclick="addText()" class="tool-btn">✍️ Smart Typography</button>
+    <header class="h-14 bg-slate-900 border-b border-slate-800 flex items-center px-6 justify-between">
+        <h1 class="font-black text-blue-500 tracking-tighter">Q-CANVA <span class="text-white opacity-50">AI</span></h1>
+        <div class="flex gap-4">
+            <button onclick="exportPNG()" class="bg-blue-600 px-6 py-2 rounded-full text-xs font-bold hover:bg-blue-500">Download Design</button>
         </div>
+    </header>
 
-        <div class="mb-6">
-            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Advanced Effects</p>
-            <button onclick="applyGradient()" class="tool-btn">🌈 Apply Gradient</button>
-            <button onclick="applyShadow()" class="tool-btn">🌑 Add Soft Shadow</button>
-            <button onclick="applyFilter('Sepia')" class="tool-btn">📸 Sepia Filter</button>
-            <button onclick="applyFilter('Grayscale')" class="tool-btn">⚪ B&W Filter</button>
-        </div>
+    <div class="flex flex-1">
+        <aside class="sidebar p-6 flex flex-col gap-6">
+            <div>
+                <p class="text-[10px] font-bold text-gray-500 uppercase mb-4">AI Assistant</p>
+                <div id="chatHistory" class="ai-chat-box mb-3 italic text-gray-400">"Ask me to add a blue circle or a quote..."</div>
+                <input type="text" id="aiInput" placeholder="Command AI..." class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-sm outline-none focus:ring-2 ring-blue-500">
+                <button onclick="askAI()" class="w-full mt-2 py-2 bg-indigo-600 rounded-lg text-xs font-bold">Execute AI Logic</button>
+            </div>
 
-        <div class="mb-6">
-            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Import & Export</p>
-            <label class="tool-btn cursor-pointer bg-blue-600 hover:bg-blue-500 text-center justify-center">
-                📁 Upload Asset <input type="file" id="imgLoader" class="hidden" onchange="handleImage(event)">
-            </label>
-            <button onclick="exportCanvas()" class="w-full py-4 bg-emerald-500 text-black font-black rounded-xl mt-4">EXPORT 4K PNG</button>
-        </div>
+            <div class="border-t border-slate-700 pt-6">
+                <p class="text-[10px] font-bold text-gray-500 uppercase mb-4">Manual Assets</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="addShape('rect')" class="bg-slate-800 py-3 rounded-lg text-xs">⬛ Square</button>
+                    <button onclick="addShape('circle')" class="bg-slate-800 py-3 rounded-lg text-xs">⚪ Circle</button>
+                    <button onclick="addText()" class="bg-slate-800 py-3 rounded-lg text-xs col-span-2">Type Text</button>
+                </div>
+            </div>
+        </aside>
 
-        <button onclick="canvas.clear(); canvas.backgroundColor='#fff'; canvas.renderAll();" class="text-xs text-red-500 underline mt-10">Reset Canvas</button>
-    </aside>
-
-    <main class="flex-1 canvas-area flex items-center justify-center relative">
-        <canvas id="mainCanvas"></canvas>
-    </main>
+        <main class="main-stage flex items-center justify-center">
+            <div class="shadow-2xl border border-white/10 rounded-lg overflow-hidden">
+                <canvas id="canvas"></canvas>
+            </div>
+        </main>
+    </div>
 
     <script>
-        // 1. Core Engine Initialization
-        const canvas = new fabric.Canvas('mainCanvas', {
-            width: 900, height: 600, backgroundColor: '#ffffff', isDrawingMode: false
-        });
+        // Init Engine
+        const canvas = new fabric.Canvas('canvas', { width: 800, height: 500, backgroundColor: '#ffffff' });
 
-        // 2. Tech: Free Drawing
-        function toggleDrawing() {
-            canvas.isDrawingMode = !canvas.isDrawingMode;
-            canvas.freeDrawingBrush.width = 5;
-            canvas.freeDrawingBrush.color = "#3b82f6";
-            document.getElementById('drawBtn').style.background = canvas.isDrawingMode ? '#3b82f6' : '#1e293b';
+        // AI Logic Simulation
+        function askAI() {
+            const input = document.getElementById('aiInput').value.toLowerCase();
+            const history = document.getElementById('chatHistory');
+            
+            if(input.includes("circle")) {
+                addShape('circle');
+                history.innerHTML += "<br>AI: Added a circle for you.";
+            } else if(input.includes("text")) {
+                addText();
+                history.innerHTML += "<br>AI: Typography layer added.";
+            } else {
+                history.innerHTML += "<br>AI: I'm ready. Try 'add circle'.";
+            }
+            document.getElementById('aiInput').value = "";
         }
 
-        // 3. Tech: Smart Typography
+        function addShape(type) {
+            let shape = type === 'rect' ? new fabric.Rect({ width: 100, height: 100, fill: '#3b82f6' }) : 
+                                         new fabric.Circle({ radius: 50, fill: '#10b981' });
+            canvas.add(shape.set({ left: 100, top: 100 }));
+        }
+
         function addText() {
-            canvas.add(new fabric.IText('Q-Engine Labs 2026', { left: 100, top: 100, fontFamily: 'Arial Black', fill: '#0f172a' }));
+            canvas.add(new fabric.IText('Your Text Here', { left: 100, top: 100, fontSize: 30, fontFamily: 'sans-serif' }));
         }
 
-        // 4. Tech: Advanced Gradients
-        function applyGradient() {
-            const obj = canvas.getActiveObject();
-            if (!obj) return alert("Select a shape first!");
-            obj.set('fill', new fabric.Gradient({
-                type: 'linear', coords: { x1: 0, y1: 0, x2: obj.width, y2: 0 },
-                colorStops: [ { offset: 0, color: '#3b82f6' }, { offset: 1, color: '#10b981' } ]
-            }));
-            canvas.renderAll();
-        }
-
-        // 5. Tech: Soft Shadows
-        function applyShadow() {
-            const obj = canvas.getActiveObject();
-            if (!obj) return;
-            obj.set('shadow', new fabric.Shadow({ color: 'rgba(0,0,0,0.3)', blur: 20, offsetX: 10, offsetY: 10 }));
-            canvas.renderAll();
-        }
-
-        // 6. Tech: Image Filters
-        function applyFilter(type) {
-            const obj = canvas.getActiveObject();
-            if (obj && obj.type === 'image') {
-                const filter = type === 'Sepia' ? new fabric.filters.Sepia() : new fabric.filters.Grayscale();
-                obj.filters.push(filter);
-                obj.applyFilters();
-                canvas.renderAll();
-            } else { alert("Please select an uploaded image."); }
-        }
-
-        // 7. Asset Handling
-        function handleImage(e) {
-            const reader = new FileReader();
-            reader.onload = f => fabric.Image.fromURL(f.target.result, img => {
-                img.scaleToWidth(300); canvas.add(img);
-            });
-            reader.readAsDataURL(e.target.files[0]);
-        }
-
-        function exportCanvas() {
+        function exportPNG() {
             const link = document.createElement('a');
-            link.download = 'Q-Project-2026.png';
-            link.href = canvas.toDataURL({ format: 'png', quality: 1 });
+            link.download = 'ai-design.png';
+            link.href = canvas.toDataURL();
             link.click();
         }
-
-        // --- SECURITY: ANTI-INSPECT ---
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.onkeydown = e => {
-            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
-        };
     </script>
 </body>
 </html>
