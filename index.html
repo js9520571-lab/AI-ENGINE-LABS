@@ -3,71 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q-Design Studio</title>
+    <title>Q-Studio Pro | Creative Hub</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        canvas { border: 1px solid #333; border-radius: 8px; background: white; }
-        body { background: #111; color: white; }
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .sidebar { background: #1e293b; width: 280px; height: 100vh; border-right: 1px solid #334155; }
+        .canvas-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 12px; overflow: hidden; }
+        /* Security: Hide selection highlight */
+        ::selection { background: transparent; }
     </style>
 </head>
-<body class="flex flex-col items-center p-10">
+<body class="flex">
 
-    <h1 class="text-3xl font-bold mb-6 text-blue-400">Q-DESIGN STUDIO</h1>
+    <aside class="sidebar p-6 flex flex-col gap-6">
+        <h1 class="text-xl font-black text-blue-400 tracking-widest">Q-STUDIO <span class="text-xs text-white opacity-50">PRO</span></h1>
+        
+        <div class="space-y-4">
+            <p class="text-xs font-bold text-gray-500 uppercase">Assets</p>
+            <button onclick="addText()" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>T</span> Add Text</button>
+            <button onclick="addShape('rect')" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>■</span> Rectangle</button>
+            <button onclick="addShape('circle')" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>●</span> Circle</button>
+            
+            <label class="w-full py-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition flex items-center px-4 gap-3 text-sm font-bold cursor-pointer text-center justify-center">
+                <span>+</span> Upload Image
+                <input type="file" id="imgLoader" class="hidden" onchange="uploadImage(event)">
+            </label>
+        </div>
 
-    <div class="flex gap-4 mb-6 bg-gray-800 p-4 rounded-2xl shadow-xl">
-        <button onclick="addRect()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-500">Add Square</button>
-        <button onclick="addCircle()" class="bg-purple-600 px-4 py-2 rounded-lg font-bold hover:bg-purple-500">Add Circle</button>
-        <button onclick="addText()" class="bg-emerald-600 px-4 py-2 rounded-lg font-bold hover:bg-emerald-500">Add Text</button>
-        <button onclick="deleteObject()" class="bg-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-500">Delete</button>
-        <button onclick="downloadDesign()" class="bg-white text-black px-4 py-2 rounded-lg font-bold">Download PNG</button>
-    </div>
+        <div class="mt-auto space-y-2">
+            <p class="text-xs font-bold text-gray-500 uppercase">Layers</p>
+            <button onclick="changeLayer('forward')" class="w-full py-2 border border-slate-600 rounded-lg text-xs hover:bg-slate-700">Bring to Front</button>
+            <button onclick="changeLayer('backward')" class="w-full py-2 border border-slate-600 rounded-lg text-xs hover:bg-slate-700">Send to Back</button>
+            <button onclick="canvas.remove(canvas.getActiveObject())" class="w-full py-2 bg-red-900/30 text-red-400 rounded-lg text-xs font-bold mt-4 hover:bg-red-900/50">Delete Selected</button>
+        </div>
+    </aside>
 
-    <canvas id="canvas" width="800" height="500"></canvas>
+    <main class="flex-1 flex flex-col items-center justify-center p-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950">
+        <div class="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        
+        <div class="mt-8 flex gap-4">
+            <button onclick="exportProject()" class="px-10 py-4 bg-emerald-500 text-black font-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-105 transition">DOWNLOAD DESIGN (.PNG)</button>
+        </div>
+    </main>
 
     <script>
-        // Initialize the Fabric Canvas
-        const canvas = new fabric.Canvas('canvas');
+        // Initialize Canvas
+        const canvas = new fabric.Canvas('mainCanvas', {
+            width: 800,
+            height: 500,
+            backgroundColor: '#ffffff'
+        });
 
-        // Function: Add Square
-        function addRect() {
-            const rect = new fabric.Rect({
-                left: 100, top: 100, fill: '#3b82f6', width: 100, height: 100, cornerRadius: 10
-            });
-            canvas.add(rect);
+        // 1. Add Shapes
+        function addShape(type) {
+            let shape;
+            if(type === 'rect') shape = new fabric.Rect({ width: 100, height: 100, fill: '#3b82f6', left: 100, top: 100 });
+            else shape = new fabric.Circle({ radius: 50, fill: '#8b5cf6', left: 150, top: 150 });
+            canvas.add(shape);
         }
 
-        // Function: Add Circle
-        function addCircle() {
-            const circle = new fabric.Circle({
-                left: 200, top: 150, fill: '#a855f7', radius: 50
-            });
-            canvas.add(circle);
-        }
-
-        // Function: Add Text (Editable)
+        // 2. Add Text
         function addText() {
-            const text = new fabric.IText('Type Something...', {
-                left: 300, top: 200, fontFamily: 'Arial', fill: '#10b981'
-            });
-            canvas.add(text);
+            canvas.add(new fabric.IText('Double click to edit', { left: 100, top: 100, fontSize: 24, fill: '#334155' }));
         }
 
-        // Function: Delete Selected Object
-        function deleteObject() {
-            const activeObject = canvas.getActiveObject();
-            if (activeObject) {
-                canvas.remove(activeObject);
+        // 3. Image Upload (The "Canva" magic)
+        function uploadImage(e) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                fabric.Image.fromURL(event.target.result, function(img) {
+                    img.scaleToWidth(200);
+                    canvas.add(img);
+                });
             }
+            reader.readAsDataURL(e.target.files[0]);
         }
 
-        // Function: Download as Image
-        function downloadDesign() {
-            const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
+        // 4. Layer Management
+        function changeLayer(dir) {
+            const obj = canvas.getActiveObject();
+            if(!obj) return;
+            dir === 'forward' ? obj.bringToFront() : obj.sendToBack();
+            canvas.renderAll();
+        }
+
+        // 5. Export Design
+        function exportProject() {
             const link = document.createElement('a');
-            link.href = dataURL;
-            link.download = 'my-design.png';
+            link.download = 'q-studio-design.png';
+            link.href = canvas.toDataURL({ format: 'png', quality: 1 });
             link.click();
+        }
+
+        // --- SECURITY: ANTI-INSPECT ---
+        document.addEventListener('contextmenu', event => event.preventDefault()); // Block Right Click
+        document.onkeydown = function(e) {
+            if(e.keyCode == 123) return false; // Block F12
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Block Ctrl+Shift+I
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Block Ctrl+Shift+C
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Block Ctrl+Shift+J
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Block Ctrl+U (View Source)
         }
     </script>
 </body>
