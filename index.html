@@ -3,79 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech Hub 2026 | Interactive</title>
+    <title>Q-Design Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #0a0a0a; --card: #1a1a1a; }
-        body { background: var(--bg); color: #fff; transition: 0.3s; }
-        .light-mode { --bg: #f3f4f6; --card: #ffffff; color: #1a1a1a; }
-        .bento-card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 24px; transition: 0.3s; }
-        .bento-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px -10px rgba(59,130,246,0.3); }
+        canvas { border: 1px solid #333; border-radius: 8px; background: white; }
+        body { background: #111; color: white; }
     </style>
 </head>
-<body class="p-6 md:p-12">
+<body class="flex flex-col items-center p-10">
 
-    <div class="max-w-5xl mx-auto">
-        <header class="flex justify-between items-center mb-12">
-            <h1 class="text-3xl font-black tracking-tighter">FUTURE_HUB</h1>
-            <button onclick="toggleTheme()" class="p-3 bento-card font-bold text-sm px-6">🌓 Toggle Light/Dark</button>
-        </header>
+    <h1 class="text-3xl font-bold mb-6 text-blue-400">Q-DESIGN STUDIO</h1>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <div class="bento-card p-8">
-                <h3 class="text-blue-400 font-bold mb-2">01 AI Prompt Engine</h3>
-                <p class="text-sm opacity-70 mb-4">Click to generate a high-demand 2026 tech prompt.</p>
-                <div id="promptDisplay" class="bg-black bg-opacity-30 p-4 rounded-xl mb-4 min-h-[60px] text-sm italic">
-                    Click the button below...
-                </div>
-                <button onclick="generatePrompt()" class="bg-blue-600 hover:bg-blue-500 text-white w-full py-3 rounded-xl font-bold transition">Generate Magic</button>
-            </div>
-
-            <div class="bento-card p-8">
-                <h3 class="text-emerald-400 font-bold mb-2">02 Quick Dev Notes</h3>
-                <p class="text-sm opacity-70 mb-4">Type here. It saves automatically to your browser.</p>
-                <textarea id="notePad" oninput="saveNote()" class="w-full h-32 bg-black bg-opacity-30 rounded-xl p-4 text-sm outline-none focus:ring-2 ring-emerald-500" placeholder="Start typing thoughts..."></textarea>
-            </div>
-
-            <div class="bento-card p-8 md:col-span-2 text-center">
-                <h3 class="text-purple-400 font-bold mb-4">Ready to build something great?</h3>
-                <div class="flex flex-wrap justify-center gap-4">
-                    <button onclick="alert('Sending Signal to Gemini AI... Status: READY')" class="px-8 py-3 bg-white text-black font-bold rounded-full hover:scale-105 transition">Hire My AI Team</button>
-                    <a href="https://github.com" target="_blank" class="px-8 py-3 border border-white/20 rounded-full hover:bg-white/10 transition">View Source Code</a>
-                </div>
-            </div>
-
-        </div>
+    <div class="flex gap-4 mb-6 bg-gray-800 p-4 rounded-2xl shadow-xl">
+        <button onclick="addRect()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold hover:bg-blue-500">Add Square</button>
+        <button onclick="addCircle()" class="bg-purple-600 px-4 py-2 rounded-lg font-bold hover:bg-purple-500">Add Circle</button>
+        <button onclick="addText()" class="bg-emerald-600 px-4 py-2 rounded-lg font-bold hover:bg-emerald-500">Add Text</button>
+        <button onclick="deleteObject()" class="bg-red-600 px-4 py-2 rounded-lg font-bold hover:bg-red-500">Delete</button>
+        <button onclick="downloadDesign()" class="bg-white text-black px-4 py-2 rounded-lg font-bold">Download PNG</button>
     </div>
 
+    <canvas id="canvas" width="800" height="500"></canvas>
+
     <script>
-        // 1. Theme Toggle Function
-        function toggleTheme() {
-            document.body.classList.toggle('light-mode');
+        // Initialize the Fabric Canvas
+        const canvas = new fabric.Canvas('canvas');
+
+        // Function: Add Square
+        function addRect() {
+            const rect = new fabric.Rect({
+                left: 100, top: 100, fill: '#3b82f6', width: 100, height: 100, cornerRadius: 10
+            });
+            canvas.add(rect);
         }
 
-        // 2. AI Prompt Generator Logic
-        const prompts = [
-            "Build a neural network for sustainable energy distribution.",
-            "Design a 3D interface for spatial computing headsets.",
-            "Create an autonomous agent that handles local grocery logistics.",
-            "Develop a blockchain protocol for verifiable AI training data."
-        ];
-        function generatePrompt() {
-            const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
-            document.getElementById('promptDisplay').innerText = randomPrompt;
+        // Function: Add Circle
+        function addCircle() {
+            const circle = new fabric.Circle({
+                left: 200, top: 150, fill: '#a855f7', radius: 50
+            });
+            canvas.add(circle);
         }
 
-        // 3. Auto-Save Note Logic (Local Storage)
-        function saveNote() {
-            const note = document.getElementById('notePad').value;
-            localStorage.setItem('savedNote', note);
+        // Function: Add Text (Editable)
+        function addText() {
+            const text = new fabric.IText('Type Something...', {
+                left: 300, top: 200, fontFamily: 'Arial', fill: '#10b981'
+            });
+            canvas.add(text);
         }
 
-        // Load note on startup
-        window.onload = () => {
-            document.getElementById('notePad').value = localStorage.getItem('savedNote') || "";
+        // Function: Delete Selected Object
+        function deleteObject() {
+            const activeObject = canvas.getActiveObject();
+            if (activeObject) {
+                canvas.remove(activeObject);
+            }
+        }
+
+        // Function: Download as Image
+        function downloadDesign() {
+            const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'my-design.png';
+            link.click();
         }
     </script>
 </body>
