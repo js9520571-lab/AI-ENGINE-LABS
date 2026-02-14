@@ -3,110 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q-Studio Pro | Creative Hub</title>
+    <title>Q-Engine Pro Studio</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .sidebar { background: #1e293b; width: 280px; height: 100vh; border-right: 1px solid #334155; }
-        .canvas-container { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); border-radius: 12px; overflow: hidden; }
-        /* Security: Hide selection highlight */
-        ::selection { background: transparent; }
+        body { background: #020617; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .sidebar { background: #0f172a; width: 300px; height: 100vh; border-right: 1px solid #1e293b; overflow-y: auto; }
+        .canvas-area { background: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 20px 20px; }
+        .tool-btn { @apply w-full py-3 px-4 rounded-xl text-sm font-semibold transition-all flex items-center gap-3 mb-2; background: #1e293b; }
+        .tool-btn:hover { background: #3b82f6; transform: translateX(5px); }
+        canvas { border-radius: 8px; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body class="flex">
 
-    <aside class="sidebar p-6 flex flex-col gap-6">
-        <h1 class="text-xl font-black text-blue-400 tracking-widest">Q-STUDIO <span class="text-xs text-white opacity-50">PRO</span></h1>
+    <aside class="sidebar p-6">
+        <h2 class="text-blue-500 font-black text-xl mb-8 tracking-tighter">Q-ENGINE PRO</h2>
         
-        <div class="space-y-4">
-            <p class="text-xs font-bold text-gray-500 uppercase">Assets</p>
-            <button onclick="addText()" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>T</span> Add Text</button>
-            <button onclick="addShape('rect')" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>■</span> Rectangle</button>
-            <button onclick="addShape('circle')" class="w-full py-3 bg-slate-700 rounded-xl hover:bg-blue-600 transition flex items-center px-4 gap-3 text-sm font-medium"><span>●</span> Circle</button>
-            
-            <label class="w-full py-3 bg-blue-600 rounded-xl hover:bg-blue-500 transition flex items-center px-4 gap-3 text-sm font-bold cursor-pointer text-center justify-center">
-                <span>+</span> Upload Image
-                <input type="file" id="imgLoader" class="hidden" onchange="uploadImage(event)">
-            </label>
+        <div class="mb-6">
+            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Draw & Write</p>
+            <button onclick="toggleDrawing()" id="drawBtn" class="tool-btn">✏️ Free Draw Mode</button>
+            <button onclick="addText()" class="tool-btn">✍️ Smart Typography</button>
         </div>
 
-        <div class="mt-auto space-y-2">
-            <p class="text-xs font-bold text-gray-500 uppercase">Layers</p>
-            <button onclick="changeLayer('forward')" class="w-full py-2 border border-slate-600 rounded-lg text-xs hover:bg-slate-700">Bring to Front</button>
-            <button onclick="changeLayer('backward')" class="w-full py-2 border border-slate-600 rounded-lg text-xs hover:bg-slate-700">Send to Back</button>
-            <button onclick="canvas.remove(canvas.getActiveObject())" class="w-full py-2 bg-red-900/30 text-red-400 rounded-lg text-xs font-bold mt-4 hover:bg-red-900/50">Delete Selected</button>
+        <div class="mb-6">
+            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Advanced Effects</p>
+            <button onclick="applyGradient()" class="tool-btn">🌈 Apply Gradient</button>
+            <button onclick="applyShadow()" class="tool-btn">🌑 Add Soft Shadow</button>
+            <button onclick="applyFilter('Sepia')" class="tool-btn">📸 Sepia Filter</button>
+            <button onclick="applyFilter('Grayscale')" class="tool-btn">⚪ B&W Filter</button>
         </div>
+
+        <div class="mb-6">
+            <p class="text-[10px] text-gray-500 font-bold uppercase mb-3">Import & Export</p>
+            <label class="tool-btn cursor-pointer bg-blue-600 hover:bg-blue-500 text-center justify-center">
+                📁 Upload Asset <input type="file" id="imgLoader" class="hidden" onchange="handleImage(event)">
+            </label>
+            <button onclick="exportCanvas()" class="w-full py-4 bg-emerald-500 text-black font-black rounded-xl mt-4">EXPORT 4K PNG</button>
+        </div>
+
+        <button onclick="canvas.clear(); canvas.backgroundColor='#fff'; canvas.renderAll();" class="text-xs text-red-500 underline mt-10">Reset Canvas</button>
     </aside>
 
-    <main class="flex-1 flex flex-col items-center justify-center p-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-800 to-slate-950">
-        <div class="canvas-container">
-            <canvas id="mainCanvas"></canvas>
-        </div>
-        
-        <div class="mt-8 flex gap-4">
-            <button onclick="exportProject()" class="px-10 py-4 bg-emerald-500 text-black font-black rounded-full shadow-lg shadow-emerald-500/20 hover:scale-105 transition">DOWNLOAD DESIGN (.PNG)</button>
-        </div>
+    <main class="flex-1 canvas-area flex items-center justify-center relative">
+        <canvas id="mainCanvas"></canvas>
     </main>
 
     <script>
-        // Initialize Canvas
+        // 1. Core Engine Initialization
         const canvas = new fabric.Canvas('mainCanvas', {
-            width: 800,
-            height: 500,
-            backgroundColor: '#ffffff'
+            width: 900, height: 600, backgroundColor: '#ffffff', isDrawingMode: false
         });
 
-        // 1. Add Shapes
-        function addShape(type) {
-            let shape;
-            if(type === 'rect') shape = new fabric.Rect({ width: 100, height: 100, fill: '#3b82f6', left: 100, top: 100 });
-            else shape = new fabric.Circle({ radius: 50, fill: '#8b5cf6', left: 150, top: 150 });
-            canvas.add(shape);
+        // 2. Tech: Free Drawing
+        function toggleDrawing() {
+            canvas.isDrawingMode = !canvas.isDrawingMode;
+            canvas.freeDrawingBrush.width = 5;
+            canvas.freeDrawingBrush.color = "#3b82f6";
+            document.getElementById('drawBtn').style.background = canvas.isDrawingMode ? '#3b82f6' : '#1e293b';
         }
 
-        // 2. Add Text
+        // 3. Tech: Smart Typography
         function addText() {
-            canvas.add(new fabric.IText('Double click to edit', { left: 100, top: 100, fontSize: 24, fill: '#334155' }));
+            canvas.add(new fabric.IText('Q-Engine Labs 2026', { left: 100, top: 100, fontFamily: 'Arial Black', fill: '#0f172a' }));
         }
 
-        // 3. Image Upload (The "Canva" magic)
-        function uploadImage(e) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                fabric.Image.fromURL(event.target.result, function(img) {
-                    img.scaleToWidth(200);
-                    canvas.add(img);
-                });
-            }
-            reader.readAsDataURL(e.target.files[0]);
-        }
-
-        // 4. Layer Management
-        function changeLayer(dir) {
+        // 4. Tech: Advanced Gradients
+        function applyGradient() {
             const obj = canvas.getActiveObject();
-            if(!obj) return;
-            dir === 'forward' ? obj.bringToFront() : obj.sendToBack();
+            if (!obj) return alert("Select a shape first!");
+            obj.set('fill', new fabric.Gradient({
+                type: 'linear', coords: { x1: 0, y1: 0, x2: obj.width, y2: 0 },
+                colorStops: [ { offset: 0, color: '#3b82f6' }, { offset: 1, color: '#10b981' } ]
+            }));
             canvas.renderAll();
         }
 
-        // 5. Export Design
-        function exportProject() {
+        // 5. Tech: Soft Shadows
+        function applyShadow() {
+            const obj = canvas.getActiveObject();
+            if (!obj) return;
+            obj.set('shadow', new fabric.Shadow({ color: 'rgba(0,0,0,0.3)', blur: 20, offsetX: 10, offsetY: 10 }));
+            canvas.renderAll();
+        }
+
+        // 6. Tech: Image Filters
+        function applyFilter(type) {
+            const obj = canvas.getActiveObject();
+            if (obj && obj.type === 'image') {
+                const filter = type === 'Sepia' ? new fabric.filters.Sepia() : new fabric.filters.Grayscale();
+                obj.filters.push(filter);
+                obj.applyFilters();
+                canvas.renderAll();
+            } else { alert("Please select an uploaded image."); }
+        }
+
+        // 7. Asset Handling
+        function handleImage(e) {
+            const reader = new FileReader();
+            reader.onload = f => fabric.Image.fromURL(f.target.result, img => {
+                img.scaleToWidth(300); canvas.add(img);
+            });
+            reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function exportCanvas() {
             const link = document.createElement('a');
-            link.download = 'q-studio-design.png';
+            link.download = 'Q-Project-2026.png';
             link.href = canvas.toDataURL({ format: 'png', quality: 1 });
             link.click();
         }
 
         // --- SECURITY: ANTI-INSPECT ---
-        document.addEventListener('contextmenu', event => event.preventDefault()); // Block Right Click
-        document.onkeydown = function(e) {
-            if(e.keyCode == 123) return false; // Block F12
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false; // Block Ctrl+Shift+I
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false; // Block Ctrl+Shift+C
-            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false; // Block Ctrl+Shift+J
-            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false; // Block Ctrl+U (View Source)
-        }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = e => {
+            if(e.keyCode == 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && e.keyCode == 85)) return false;
+        };
     </script>
 </body>
 </html>
