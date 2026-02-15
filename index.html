@@ -14,7 +14,20 @@
 * {
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none; 
-    -webkit-user-selectstyle>
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* 2. Keep the Code Editor and AI Input usable so you can still type */
+#monaco-editor, input, textarea, .monaco-editor * {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+/* 3. Mobile Video Fix: Ensure it doesn't try to open "Full Screen" on tap */
+video {
+    pointer-events: none;
+}style>
 </head>
 <body>
 
