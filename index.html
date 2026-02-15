@@ -10,7 +10,11 @@
         .sidebar { width: 320px; background: #0f172a; border-right: 1px solid #1e293b; }
         #monaco-editor { height: 100%; width: 100%; background: #1e1e1e; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-    </style>
+    </* 1. Stop the blue box highlight and text selection popups */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none; 
+    -webkit-user-selectstyle>
 </head>
 <body>
 
