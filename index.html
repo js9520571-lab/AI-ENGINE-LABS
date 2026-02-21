@@ -1,130 +1,63 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Q-Academy | AI Learning Platform</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* MOBILE SHIELD: Prevents blue highlights and Google Search popups */
-        * {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-            outline: none !important;
-        }
+import express from "express";
+import OpenAI from "openai";
 
-        /* Allow typing only in the editor and inputs */
-        #monaco-editor, input, textarea, .monaco-editor * {
-            -webkit-user-select: text !important;
-            user-select: text !important;
-        }
+const app = express();
+app.use(express.json());
 
-        body { 
-            background: #020617; 
-            color: white; 
-            height: 100vh; 
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
-            margin: 0;
-        }
+const openai = new OpenAI({
+  apiKey: "PASTE_YOUR_OPENAI_KEY_HERE"
+});
 
-        /* BLACK SCREEN FIX: Force parent containers to have height */
-        .main-layout {
-            display: flex;
-            flex: 1;
-            height: calc(100vh - 64px); /* Full height minus header */
-            overflow: hidden;
-        }
+// ===== CHAT =====
+app.post("/chat", async (req, res) => {
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: req.body.message }]
+    });
 
-        #monaco-editor {
-            flex: 1;
-            height: 100% !important;
-            width: 100% !important;
-            background: #1e1e1e;
-        }
+    res.json({ reply: completion.choices[0].message.content });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-        .sidebar { width: 300px; background: #0f172a; border-right: 1px solid #1e293b; }
+// ===== IMAGE =====
+app.post("/image", async (req, res) => {
+  try {
+    const image = await openai.images.generate({
+      model: "gpt-image-1",
+      prompt: req.body.prompt,
+      size: "1024x1024"
+    });
 
-        @media (max-width: 768px) {
-            .main-layout { flex-direction: column; overflow-y: auto; }
-            .sidebar { width: 100%; height: auto; }
-            #monaco-editor { height: 400px !important; min-height: 400px; }
-            .video-container { height: 300px !important; }
-        }
-    </style>
-</head>
-<body>
+    res.json({ image: image.data[0].url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    <header class="h-16 bg-slate-900 border-b border-slate-800 flex items-center px-6 justify-between shrink-0">
-        <span class="text-blue-500 font-black text-xl italic tracking-tighter">Q-ACADEMY</span>
-        <div class="hidden md:flex gap-4 items-center">
-            <div class="h-1.5 w-32 bg-slate-800 rounded-full"><div class="w-1/3 h-full bg-blue-500"></div></div>
-            <span class="text-[10px] font-bold text-slate-400">33% DONE</span>
-        </div>
-    </header>
+// ===== VIDEO SCRIPT =====
+app.post("/video", async (req, res) => {
+  try {
+    const video = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "You are a cinematic video creator." },
+        { role: "user", content: "Create a detailed video scene script for: " + req.body.prompt }
+      ]
+    });
 
-    <div class="main-layout">
-        <aside class="sidebar flex flex-col shrink-0">
-            <div class="p-4 bg-slate-900/50 border-b border-slate-800 text-xs font-bold text-slate-500 tracking-widest uppercase">Course Content</div>
-            <div class="flex-1 overflow-y-auto">
-                <div class="p-4 border-l-4 border-blue-500 bg-blue-500/5">
-                    <p class="text-[10px] text-blue-400 font-bold mb-1 uppercase">Lesson 01</p>
-                    <p class="text-sm font-semibold">Intro to AI Logic</p>
-                </div>
-                <div class="p-4 border-b border-slate-800/50 opacity-50">
-                    <p class="text-[10px] text-slate-500 font-bold mb-1 uppercase">Lesson 02</p>
-                    <p class="text-sm font-semibold">Neural Network Basics</p>
-                </div>
-            </div>
-            <div class="p-4 bg-slate-950 border-t border-slate-800">
-                <input type="text" placeholder="Ask the AI Tutor..." class="w-full bg-slate-900 border border-slate-800 p-3 rounded-lg text-xs">
-            </div>
-        </aside>
+    res.json({ script: video.choices[0].message.content });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
-            <div class="video-container flex-1 bg-black relative border-r border-slate-800">
-                <video class="w-full h-full object-cover opacity-40" autoplay muted loop playsinline>
-                    <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-a-circuit-board-1100-large.mp4" type="video/mp4">
-                </video>
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                    <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mb-4 shadow-xl shadow-blue-500/20">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-                    </div>
-                    <h2 class="font-bold text-lg">AI Lesson 01: Foundations</h2>
-                    <p class="text-xs text-slate-400 mt-2">Generated by Q-Engine v3.0</p>
-                </div>
-            </div>
+app.get("/", (req, res) => {
+  res.send("AI Server Running 🚀");
+});
 
-            <div class="flex-1 flex flex-col min-h-[400px]">
-                <div class="h-10 bg-slate-800 flex items-center px-4 justify-between shrink-0">
-                    <span class="text-[10px] font-bold text-slate-400 tracking-widest">SANDBOX.PY</span>
-                    <button onclick="alert('Running code...')" class="bg-emerald-600 px-4 py-1 rounded text-[10px] font-bold uppercase hover:bg-emerald-500">Run</button>
-                </div>
-                <div id="monaco-editor"></div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
-    <script>
-        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-        require(['vs/editor/editor.main'], function() {
-            window.editor = monaco.editor.create(document.getElementById('monaco-editor'), {
-                value: "# Welcome to Q-Academy\nprint('AI is ready for your code.')\n\n# Your logic goes here:",
-                language: 'python',
-                theme: 'vs-dark',
-                automaticLayout: true,
-                fontSize: 14,
-                minimap: { enabled: false },
-                scrollbar: { vertical: 'hidden' }
-            });
-        });
-
-        // Trigger layout refresh on resize for mobile
-        window.addEventListener('resize', () => { if(window.editor) window.editor.layout(); });
-    </script>
-</body>
-</html>
+app.listen(3000, () => {
+  console.log("Server running on http://localhost:3000");
+});
