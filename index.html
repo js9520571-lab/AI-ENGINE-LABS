@@ -1,78 +1,37 @@
-node app.js{
-  "message": "Explain black holes"
-}"type": "module"
-import express from "express";
-import OpenAI from "openai";
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f8ff; color: #333; padding: 20px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo { width: 80px; margin-bottom: 10px; }
+        .coupon-box { border: 2px dashed #007bff; background: #e7f3ff; padding: 20px; margin: 20px 0; border-radius: 10px; }
+        .promo-code { font-size: 24px; font-weight: bold; color: #007bff; }
+        .btn { background: #28a745; color: white; padding: 15px 30px; border: none; border-radius: 5px; font-size: 18px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .footer { font-size: 12px; margin-top: 30px; color: #777; }
+    </style>
+</head>
+<body>
 
-const app = express();
-app.use(express.json());
+    <div class="card">
+        <img src="https://cdn-icons-png.flaticon.com/512/3105/3105807.png" class="logo" alt="Logo">
+        <h1>CONGRATULATIONS!</h1>
+        <p>You've unlocked an exclusive deal in Nanded.</p>
+        
+        <div class="coupon-box">
+            <p>Your Discount Code:</p>
+            <div class="promo-code">NANDED20</div>
+            <p><strong>20% OFF at Shree Classes</strong></p>
+        </div>
 
-const openai = new OpenAI({
-  apiKey: "PASTE_YOUR_OPENAI_KEY_HERE"
-});
+        <p>Show this screen at the counter to claim.</p>
+        <a href="https://wa.me/YOUR_NUMBER" class="btn">Order More Water</a>
+    </div>
 
-// ===== CHAT =====
-app.post("/chat", async (req, res) => {
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: req.body.message }]
-    });
+    <div class="footer">
+        Powered by Nanded Smart-Water Advertising
+    </div>
 
-    res.json({ reply: completion.choices[0].message.content });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ===== IMAGE =====
-app.post("/image", async (req, res) => {
-  try {
-    const image = await openai.images.generate({
-      model: "gpt-image-1",
-      prompt: req.body.prompt,
-      size: "1024x1024"
-    });
-
-    res.json({ image: image.data[0].url });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ===== VIDEO SCRIPT =====
-app.post("/video", async (req, res) => {
-  try {
-    const video = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "You are a cinematic video creator." },
-        { role: "user", content: "Create a detailed video scene script for: " + req.body.prompt }
-      ]
-    });
-
-    res.json({ script: video.choices[0].message.content });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get("/", (req, res) => {
-  res.send("AI Server Running 🚀");
-});
-
-app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
-});
-{
-  "prompt": "A futuristic city at sunset"
-}{
-  "prompt": "Motivational gym commercial"
-}npm init -y
-npm install express openai"type": "module"node app.js{
-  "message": "Explain black holes"
-}{
-  "prompt": "A futuristic city at sunset"
-}{
-  "prompt": "Motivational gym commercial"
-}
+</body>
+</html>
