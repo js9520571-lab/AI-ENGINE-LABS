@@ -1,8 +1,1 @@
-npm init -y
-npm install express openai"type": "module"node app.js{
-  "message": "Explain black holes"
-}{
-  "prompt": "A futuristic city at sunset"
-}{
-  "prompt": "Motivational gym commercial"
-}
+
